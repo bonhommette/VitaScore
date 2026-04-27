@@ -361,6 +361,49 @@
     color: rgba(255,255,255,0.5);
     cursor: not-allowed;
   }
+  .send-grid {
+    display: flex; flex-direction: column; gap: 10px;
+    margin: 6px 0 4px;
+  }
+  .btn-send.btn-gmail,
+  .btn-send.btn-mailto,
+  .btn-send.btn-auto {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 18px;
+    text-align: left;
+    width: 100%;
+  }
+  .btn-send.btn-gmail {
+    background: white; color: var(--deep);
+    border: 2px solid var(--mint);
+  }
+  .btn-send.btn-gmail:hover {
+    background: var(--mint); color: var(--deep);
+  }
+  .btn-send.btn-mailto {
+    background: rgba(255,255,255,0.08);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.25);
+  }
+  .btn-send.btn-mailto:hover {
+    background: rgba(255,255,255,0.15);
+  }
+  .btn-send.btn-auto {
+    background: rgba(2, 195, 154, 0.15);
+    color: white;
+    border: 1px solid rgba(2, 195, 154, 0.5);
+  }
+  .btn-send.btn-auto:hover {
+    background: rgba(2, 195, 154, 0.25);
+  }
+  .btn-emoji {
+    font-size: 24px; flex-shrink: 0;
+  }
+  .btn-stack {
+    display: flex; flex-direction: column; gap: 2px;
+  }
+  .btn-stack strong { font-size: 14.5px; line-height: 1.2; }
+  .btn-stack small { font-size: 12px; opacity: 0.8; line-height: 1.3; font-weight: 400; }
   .send-status {
     margin-top: 12px;
     font-size: 13.5px;
@@ -774,12 +817,38 @@
 
     <div class="send-email-block">
       <h3>📨 Send the real report to your email</h3>
-      <p>Click below to send this VitaScore report as an actual email to <strong id="email-display-target">your address</strong>.</p>
-      <button class="btn-send" id="btn-send-email" onclick="sendRealEmail()">Send report to my email</button>
+      <p>Three options below — the Gmail one is the most reliable for a screenshot.</p>
+
+      <div class="send-grid">
+        <button class="btn-send btn-gmail" onclick="openInGmail()">
+          <span class="btn-emoji">📧</span>
+          <span class="btn-stack">
+            <strong>Send via Gmail</strong>
+            <small>Opens Gmail compose with the report pre-filled — recommended</small>
+          </span>
+        </button>
+        <button class="btn-send btn-mailto" onclick="openInMailApp()">
+          <span class="btn-emoji">💌</span>
+          <span class="btn-stack">
+            <strong>Send via my mail app</strong>
+            <small>Opens your default email client (Apple Mail, Outlook…)</small>
+          </span>
+        </button>
+        <button class="btn-send btn-auto" id="btn-send-email" onclick="sendRealEmail()">
+          <span class="btn-emoji">⚡</span>
+          <span class="btn-stack">
+            <strong>Auto-send via Formsubmit</strong>
+            <small>Fully automatic — needs one-time activation click in your inbox</small>
+          </span>
+        </button>
+      </div>
+
       <div class="send-status" id="send-status"></div>
       <div class="activation-note hidden" id="activation-note">
-        <strong>One-time setup:</strong> The first email you receive will be an <em>activation request</em> from Formsubmit
-        (the free service powering the send). Click the activation link in that email, then click <em>"Send report"</em> again — every report after that lands directly in your inbox.
+        <strong>Formsubmit not arriving?</strong> The first time you click the auto-send option, Formsubmit
+        emails you an <em>activation request</em>. <strong>Check your spam / Promotions tab.</strong>
+        Click the activation link inside, then come back and click auto-send a second time. If it still doesn't
+        work, just use the <strong>Gmail</strong> button above — it always works.
       </div>
     </div>
 
@@ -1216,8 +1285,8 @@
     // Email preview
     document.getElementById('email-to-display').textContent =
       state.user.email || 'family@example.com';
-    document.getElementById('email-display-target').textContent =
-      state.user.email || 'your address';
+    const target = document.getElementById('email-display-target');
+    if (target) target.textContent = state.user.email || 'your address';
     // Reset the send block in case user runs the demo more than once
     const sendBtn = document.getElementById('btn-send-email');
     const sendStatus = document.getElementById('send-status');
@@ -1296,6 +1365,94 @@
     `;
   }
 
+  // ===================== Build email content (shared) =====================
+  function buildEmailPayload() {
+    const score = computeScore();
+    const cats = categoryBreakdown();
+    const u = state.user.email ? getUser(state.user.email) : null;
+    let delta;
+    if (u && u.history.length >= 2) {
+      const prev = u.history[u.history.length - 2];
+      delta = score - prev.score;
+    } else {
+      delta = score - PREVIOUS_SCORE;
+    }
+    const month = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    let status, message;
+    if (score >= 75) {
+      status = 'Good — keep it up';
+      message = 'Score is healthy. No action needed this month.';
+    } else if (score >= 60) {
+      status = 'Watch — areas to monitor';
+      message = 'Mild warning signs. Suggest a GP check-in within 2 weeks.';
+    } else {
+      status = 'Alert — please act this week';
+      message = 'Score below threshold. Family is notified; book a GP appointment now.';
+    }
+
+    const deltaText = delta >= 0 ? `+${delta}` : `${delta}`;
+    const breakdownLines = cats.map(c => `  • ${c.name}: ${c.score}/100`).join('\n');
+    const nextStep =
+      score < 60 ? `Call ${state.user.name.split(' ')[0]} today and book a GP appointment within the week.`
+      : score < 75 ? `Friendly check-in call recommended this week.`
+      : `Keep current routines steady. No action needed.`;
+
+    const subject = `VitaScore Monthly Report — ${state.user.name} — ${score}/100 — ${status}`;
+    const body =
+`Hello,
+
+Here is the ${month} VitaScore for ${state.user.name}${state.user.age ? ` (${state.user.age})` : ''}.
+
+VitaScore: ${score} / 100  (${deltaText} vs last month)
+Status: ${status}
+
+${message}
+
+Breakdown:
+${breakdownLines}
+
+Recommended next step:
+${nextStep}
+
+— VitaScore
+Preventive health scoring for seniors 65+
+`;
+    return { subject, body, score, status, message, deltaText, cats, nextStep, month };
+  }
+
+  // ===================== Send via Gmail compose URL (most reliable) =====================
+  function openInGmail() {
+    const email = (state.user.email || '').trim();
+    const statusEl = document.getElementById('send-status');
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      statusEl.className = 'send-status error';
+      statusEl.textContent = '⚠ Please go back and enter a valid email on the welcome page.';
+      return;
+    }
+    const { subject, body } = buildEmailPayload();
+    const url = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(url, '_blank', 'noopener');
+    statusEl.className = 'send-status success';
+    statusEl.textContent = '✓ Gmail opened in a new tab. Click "Send" there — the email lands in your inbox instantly.';
+  }
+
+  // ===================== Send via mailto: (default mail app) =====================
+  function openInMailApp() {
+    const email = (state.user.email || '').trim();
+    const statusEl = document.getElementById('send-status');
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      statusEl.className = 'send-status error';
+      statusEl.textContent = '⚠ Please go back and enter a valid email on the welcome page.';
+      return;
+    }
+    const { subject, body } = buildEmailPayload();
+    const href = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.location.href = href;
+    statusEl.className = 'send-status success';
+    statusEl.textContent = '✓ Your default mail app should open. Click "Send" there to deliver the report.';
+  }
+
   // ===================== Real email send (Formsubmit) =====================
   async function sendRealEmail() {
     const btn = document.getElementById('btn-send-email');
@@ -1362,18 +1519,19 @@
 
       if (res.ok && (data.success === 'true' || data.success === true)) {
         statusEl.className = 'send-status success';
-        statusEl.textContent = `✓ Request sent to ${email}. Check your inbox in a few seconds.`;
+        statusEl.textContent = `✓ Request sent to ${email}. Check your inbox AND spam folder in 30 seconds.`;
         activationNote.classList.remove('hidden');
-        btn.textContent = 'Send another report';
         btn.disabled = false;
       } else {
         statusEl.className = 'send-status error';
-        statusEl.textContent = '✗ Could not send. ' + (data.message || 'Please retry in a moment.');
+        statusEl.textContent = '✗ Formsubmit responded: ' + (data.message || 'unknown error') + '. Try the Gmail button above instead.';
+        activationNote.classList.remove('hidden');
         btn.disabled = false;
       }
     } catch (err) {
       statusEl.className = 'send-status error';
-      statusEl.textContent = '✗ Network error. Please retry.';
+      statusEl.textContent = '✗ Network error reaching Formsubmit. Use the Gmail button above — it always works.';
+      activationNote.classList.remove('hidden');
       btn.disabled = false;
     }
   }
