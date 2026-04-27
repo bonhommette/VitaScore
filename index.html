@@ -1,0 +1,1633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VitaScore — Live MVP Demo</title>
+<style>
+  :root {
+    --deep: #0A2E36;
+    --teal: #028090;
+    --mint: #02C39A;
+    --sand: #F5F1E8;
+    --cream: #FCFAF4;
+    --warn: #E8A33D;
+    --danger: #C94B4B;
+    --text: #1B2A2F;
+    --muted: #6A7B80;
+    --border: #E2DED1;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+  .app {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 32px;
+  }
+  .brand-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--teal);
+  }
+  .brand-name {
+    font-size: 22px; font-weight: 700; color: var(--deep);
+    letter-spacing: -0.3px;
+  }
+  .brand-tag {
+    margin-left: auto;
+    font-size: 13px; color: var(--muted); font-style: italic;
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    box-shadow: 0 2px 8px rgba(10, 46, 54, 0.04);
+  }
+  h1 { font-size: 32px; color: var(--deep); margin-bottom: 12px; letter-spacing: -0.5px; }
+  h2 { font-size: 22px; color: var(--deep); margin-bottom: 8px; }
+  h3 { font-size: 17px; color: var(--deep); margin: 20px 0 8px; }
+  p.lead { font-size: 17px; color: var(--muted); margin-bottom: 24px; }
+  p { margin-bottom: 14px; }
+
+  .progress-wrap {
+    background: var(--sand);
+    height: 6px; border-radius: 999px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%; background: var(--mint);
+    width: 0%;
+    transition: width 0.3s ease;
+  }
+  .step-label {
+    font-size: 13px; color: var(--muted);
+    margin-bottom: 8px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .question {
+    font-size: 22px; color: var(--deep);
+    margin-bottom: 20px; line-height: 1.35;
+    font-weight: 600;
+  }
+  .question-sub {
+    font-size: 14px; color: var(--muted); margin-bottom: 24px;
+  }
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .option {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 18px;
+    background: var(--cream);
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-size: 16px;
+  }
+  .option:hover {
+    border-color: var(--teal);
+    background: white;
+  }
+  .option.selected {
+    border-color: var(--teal);
+    background: rgba(2, 128, 144, 0.06);
+  }
+  .option-marker {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    flex-shrink: 0;
+    position: relative;
+  }
+  .option.selected .option-marker {
+    border-color: var(--teal);
+  }
+  .option.selected .option-marker::after {
+    content: '';
+    position: absolute; inset: 4px;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+  .controls {
+    display: flex; gap: 12px;
+    margin-top: 28px;
+  }
+  button {
+    font-family: inherit;
+    font-size: 16px; font-weight: 600;
+    padding: 14px 24px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-primary {
+    background: var(--teal); color: white;
+    flex: 1;
+  }
+  .btn-primary:hover { background: var(--deep); }
+  .btn-primary:disabled {
+    background: var(--border); color: var(--muted);
+    cursor: not-allowed;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: var(--sand); }
+
+  /* Welcome */
+  .welcome-hero {
+    text-align: center;
+    padding: 40px 0 32px;
+  }
+  .hero-icon {
+    width: 68px; height: 68px;
+    background: var(--teal);
+    border-radius: 50%;
+    margin: 0 auto 20px;
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-size: 32px; font-weight: 700;
+  }
+  .meta-row {
+    display: flex; gap: 24px; justify-content: center;
+    margin: 24px 0;
+    flex-wrap: wrap;
+  }
+  .meta-item {
+    text-align: center;
+  }
+  .meta-num {
+    font-size: 24px; font-weight: 700; color: var(--teal);
+    display: block;
+  }
+  .meta-label {
+    font-size: 13px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .form-field {
+    margin-bottom: 18px;
+  }
+  .form-field label {
+    display: block; font-size: 14px; font-weight: 600;
+    color: var(--deep); margin-bottom: 6px;
+  }
+  .form-field input {
+    width: 100%; padding: 12px 14px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    background: var(--cream);
+  }
+  .form-field input:focus {
+    outline: none; border-color: var(--teal);
+    background: white;
+  }
+  .form-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+
+  /* Result page */
+  .score-display {
+    text-align: center;
+    padding: 24px 0 12px;
+  }
+  .score-ring {
+    width: 220px; height: 220px;
+    margin: 0 auto 20px;
+    position: relative;
+  }
+  .score-ring svg {
+    transform: rotate(-90deg);
+  }
+  .score-ring .ring-bg {
+    fill: none;
+    stroke: var(--sand);
+    stroke-width: 16;
+  }
+  .score-ring .ring-fg {
+    fill: none;
+    stroke-width: 16;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s ease;
+  }
+  .score-num {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 64px; font-weight: 700;
+    color: var(--deep);
+    letter-spacing: -2px;
+  }
+  .score-status {
+    font-size: 22px; font-weight: 700;
+    margin-top: 8px;
+  }
+  .score-status.good { color: var(--mint); }
+  .score-status.warn { color: var(--warn); }
+  .score-status.alert { color: var(--danger); }
+  .score-message {
+    font-size: 15px; color: var(--muted);
+    max-width: 480px; margin: 8px auto 28px;
+  }
+  .indicators {
+    background: var(--cream);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin: 24px 0;
+  }
+  .indicator-row {
+    display: flex; align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .indicator-row:last-child { border-bottom: none; }
+  .indicator-label {
+    flex: 1; font-size: 15px; font-weight: 500;
+  }
+  .indicator-value {
+    background: var(--mint);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 13px; font-weight: 700;
+    min-width: 44px; text-align: center;
+  }
+  .indicator-value.warn { background: var(--warn); }
+  .indicator-value.alert { background: var(--danger); }
+
+  /* Email preview */
+  .email-preview {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0;
+    margin: 20px 0;
+    overflow: hidden;
+  }
+  .email-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--cream);
+  }
+  .email-meta {
+    font-size: 13px; color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .email-meta strong { color: var(--text); font-weight: 600; }
+  .email-subject {
+    font-size: 16px; font-weight: 700;
+    color: var(--deep); margin-top: 8px;
+  }
+  .email-body {
+    padding: 22px 24px;
+    font-size: 15px; line-height: 1.6;
+  }
+  .email-body p { margin-bottom: 12px; }
+  .email-cta {
+    display: inline-block;
+    background: var(--teal); color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    margin: 8px 0;
+  }
+  .alert-banner {
+    background: rgba(201, 75, 75, 0.1);
+    border-left: 4px solid var(--danger);
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .alert-banner strong { color: var(--danger); }
+  .info-banner {
+    background: rgba(2, 195, 154, 0.1);
+    border-left: 4px solid var(--mint);
+    padding: 14px 18px;
+    border-radius: 8px;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .send-email-block {
+    background: var(--deep);
+    color: white;
+    border-radius: 14px;
+    padding: 22px 26px;
+    margin: 28px 0 12px;
+    text-align: center;
+  }
+  .send-email-block h3 {
+    color: white;
+    margin: 0 0 6px;
+    font-size: 18px;
+  }
+  .send-email-block p {
+    color: rgba(255,255,255,0.75);
+    font-size: 13.5px;
+    margin: 0 0 14px;
+  }
+  .btn-send {
+    background: var(--mint);
+    color: var(--deep);
+    font-weight: 700;
+    padding: 12px 22px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.15s ease;
+  }
+  .btn-send:hover { background: white; }
+  .btn-send:disabled {
+    background: rgba(255,255,255,0.2);
+    color: rgba(255,255,255,0.5);
+    cursor: not-allowed;
+  }
+  .send-status {
+    margin-top: 12px;
+    font-size: 13.5px;
+    min-height: 18px;
+  }
+  .send-status.success { color: var(--mint); font-weight: 600; }
+  .send-status.error { color: #FFB4B4; }
+  .activation-note {
+    background: rgba(232, 163, 61, 0.12);
+    border-left: 4px solid var(--warn);
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-top: 14px;
+    text-align: left;
+  }
+  .activation-note strong { color: var(--warn); }
+
+  /* Reminders block */
+  .reminders-block {
+    background: var(--cream);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin: 24px 0 8px;
+  }
+  .reminders-block h3 { margin-bottom: 4px; }
+  .reminders-block p.sub {
+    font-size: 13.5px; color: var(--muted); margin: 0 0 16px;
+  }
+  .freq-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .freq-option {
+    padding: 14px 16px;
+    background: white;
+    border: 2px solid var(--border);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    text-align: center;
+  }
+  .freq-option:hover { border-color: var(--teal); }
+  .freq-option.selected {
+    border-color: var(--teal);
+    background: rgba(2, 128, 144, 0.06);
+  }
+  .freq-num {
+    display: block;
+    font-size: 22px; font-weight: 700; color: var(--deep);
+  }
+  .freq-label {
+    font-size: 12px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .next-reminder {
+    text-align: center;
+    font-size: 14px; color: var(--muted);
+    margin-top: 14px;
+  }
+  .next-reminder strong { color: var(--teal); }
+
+  /* Welcome side actions */
+  .welcome-actions {
+    display: flex; gap: 10px; margin-top: 18px;
+    flex-wrap: wrap;
+  }
+  .welcome-actions .btn-secondary {
+    flex: 1;
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--deep);
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 12px;
+  }
+  .welcome-actions .btn-secondary:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+
+  /* Login block */
+  .login-form {
+    margin-top: 12px;
+  }
+
+  /* History page */
+  .history-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; flex-wrap: wrap; gap: 8px;
+  }
+  .history-stats {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px;
+    margin: 24px 0;
+  }
+  .stat-card {
+    background: var(--cream);
+    border-radius: 12px;
+    padding: 18px 14px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .stat-num {
+    font-size: 28px; font-weight: 700; color: var(--deep);
+    display: block; line-height: 1;
+  }
+  .stat-num.up { color: var(--mint); }
+  .stat-num.down { color: var(--danger); }
+  .stat-label {
+    font-size: 11.5px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-top: 6px; display: block;
+  }
+  .chart-wrap {
+    background: var(--cream);
+    border-radius: 14px;
+    padding: 22px 18px 14px;
+    margin: 20px 0 28px;
+    border: 1px solid var(--border);
+  }
+  .chart-wrap h3 { margin: 0 0 12px 4px; }
+  .history-list {
+    display: flex; flex-direction: column; gap: 10px;
+    margin-top: 12px;
+  }
+  .history-item {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 16px;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+  .history-score {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 700;
+    color: white;
+    flex-shrink: 0;
+  }
+  .history-info { flex: 1; min-width: 0; }
+  .history-date {
+    font-size: 14px; font-weight: 600; color: var(--deep);
+  }
+  .history-status-row {
+    font-size: 13px; color: var(--muted);
+    margin-top: 2px;
+  }
+  .history-delta {
+    font-size: 13px; font-weight: 600;
+    padding: 4px 10px; border-radius: 999px;
+  }
+  .history-delta.up { background: rgba(2,195,154,0.15); color: #06876b; }
+  .history-delta.down { background: rgba(201,75,75,0.15); color: var(--danger); }
+  .history-delta.flat { background: var(--sand); color: var(--muted); }
+  .empty-history {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+  .empty-history h3 { color: var(--deep); margin-bottom: 6px; }
+  .top-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--teal); font-size: 14px; font-weight: 600;
+    text-decoration: none; cursor: pointer;
+    background: none; border: none;
+    padding: 0;
+  }
+  .top-link:hover { color: var(--deep); }
+  .footer-note {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 36px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .demo-tag {
+    display: inline-block;
+    background: var(--mint);
+    color: white;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-bottom: 12px;
+  }
+  .step-pill {
+    display: inline-block;
+    padding: 5px 12px;
+    background: var(--sand);
+    color: var(--deep);
+    border-radius: 999px;
+    font-size: 12px; font-weight: 600;
+    margin-bottom: 16px;
+  }
+  .reset-link {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .reset-link a {
+    color: var(--teal);
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .hidden { display: none; }
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .meta-row { gap: 16px; }
+    h1 { font-size: 26px; }
+    .question { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="brand">
+    <div class="brand-dot"></div>
+    <div class="brand-name">VitaScore</div>
+    <div class="brand-tag">Live MVP demo</div>
+  </header>
+
+  <!-- WELCOME -->
+  <section id="welcome" class="card">
+    <span class="demo-tag">Demo</span>
+    <div class="welcome-hero">
+      <div class="hero-icon">VS</div>
+      <h1>Your monthly health check-in</h1>
+      <p class="lead">Twelve simple questions. One score. Peace of mind for your family.</p>
+    </div>
+
+    <div class="meta-row">
+      <div class="meta-item">
+        <span class="meta-num">12</span>
+        <span class="meta-label">Questions</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-num">5 min</span>
+        <span class="meta-label">To complete</span>
+      </div>
+      <div class="meta-item">
+        <span class="meta-num">0–100</span>
+        <span class="meta-label">VitaScore</span>
+      </div>
+    </div>
+
+    <h3 style="margin-top: 28px;">Tell us about yourself</h3>
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Senior's name</label>
+        <input type="text" id="senior-name" placeholder="e.g., Marie Bonhomme" value="Marie Bonhomme">
+      </div>
+      <div class="form-field">
+        <label>Age</label>
+        <input type="number" id="senior-age" placeholder="72" value="72">
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Family contact email (for the report)</label>
+      <input type="email" id="family-email" placeholder="your.email@example.com" value="bonhomme.l307@gmail.com">
+    </div>
+
+    <div class="controls">
+      <button class="btn-primary" onclick="startQuestionnaire()">Start questionnaire →</button>
+    </div>
+
+    <div class="welcome-actions">
+      <button class="btn-secondary" onclick="goToLogin()">📊 View my history</button>
+      <button class="btn-secondary" onclick="goToReminders()">🔔 Set up reminders</button>
+    </div>
+  </section>
+
+  <!-- LOGIN -->
+  <section id="login" class="card hidden">
+    <span class="demo-tag">Returning user</span>
+    <h2>Access your VitaScore history</h2>
+    <p class="lead">Enter the email you used last time. We'll pull up every past assessment and show your trend.</p>
+    <div class="login-form">
+      <div class="form-field">
+        <label>Your email</label>
+        <input type="email" id="login-email" placeholder="your.email@example.com" value="bonhomme.l307@gmail.com">
+      </div>
+      <div class="send-status" id="login-status"></div>
+      <div class="controls">
+        <button class="btn-secondary" onclick="backToWelcome()">← Back</button>
+        <button class="btn-primary" onclick="loginAndShowHistory()">View my history →</button>
+      </div>
+    </div>
+    <p style="font-size: 12.5px; color: var(--muted); margin-top: 18px; line-height: 1.5;">
+      In production this would send a one-time magic link by email (no password). For this demo, your data is stored
+      locally in your browser and looked up by email instantly.
+    </p>
+  </section>
+
+  <!-- HISTORY -->
+  <section id="history" class="card hidden">
+    <div class="history-header">
+      <div>
+        <span class="demo-tag">Health history</span>
+        <h2 id="history-title">Marie's VitaScore history</h2>
+        <p class="lead" id="history-subtitle">All your monthly check-ins in one place.</p>
+      </div>
+      <button class="top-link" onclick="backToWelcome()">← Welcome</button>
+    </div>
+
+    <div class="history-stats" id="history-stats"></div>
+
+    <div class="chart-wrap">
+      <h3>Score over time</h3>
+      <div id="history-chart"></div>
+    </div>
+
+    <h3>All assessments</h3>
+    <div class="history-list" id="history-list"></div>
+
+    <div class="controls" style="margin-top: 28px;">
+      <button class="btn-secondary" onclick="backToWelcome()">← Back to welcome</button>
+      <button class="btn-primary" onclick="newAssessmentFromHistory()">+ New monthly check-in</button>
+    </div>
+  </section>
+
+  <!-- REMINDERS SETUP (standalone page) -->
+  <section id="reminders-page" class="card hidden">
+    <div class="history-header">
+      <div>
+        <span class="demo-tag">Reminders</span>
+        <h2>Get reminded to check in</h2>
+        <p class="lead">Pick a frequency. We'll email you when it's time for the next questionnaire.</p>
+      </div>
+      <button class="top-link" onclick="backToWelcome()">← Welcome</button>
+    </div>
+
+    <div class="form-field" style="margin-top: 18px;">
+      <label>Email to send reminders to</label>
+      <input type="email" id="reminder-email" placeholder="your.email@example.com" value="bonhomme.l307@gmail.com">
+    </div>
+
+    <div class="reminders-block">
+      <h3>How often?</h3>
+      <p class="sub">You can change this any time.</p>
+      <div class="freq-grid">
+        <div class="freq-option selected" data-days="14" onclick="selectFrequency(this)">
+          <span class="freq-num">14 days</span>
+          <span class="freq-label">Every 2 weeks</span>
+        </div>
+        <div class="freq-option" data-days="30" onclick="selectFrequency(this)">
+          <span class="freq-num">Monthly</span>
+          <span class="freq-label">Every 30 days</span>
+        </div>
+      </div>
+      <div class="next-reminder" id="next-reminder-display">
+        Next reminder: <strong id="next-reminder-date">—</strong>
+      </div>
+    </div>
+
+    <div class="send-status" id="reminder-status" style="margin-top: 8px;"></div>
+
+    <div class="controls" style="margin-top: 18px;">
+      <button class="btn-secondary" onclick="backToWelcome()">← Back</button>
+      <button class="btn-primary" id="btn-subscribe" onclick="subscribeToReminders()">Subscribe to reminders</button>
+    </div>
+
+    <div class="activation-note hidden" id="reminder-activation-note">
+      <strong>One-time setup:</strong> The first email is a Formsubmit activation request. Click the link inside,
+      then come back and click "Subscribe" once more to confirm. After that, in production, the Apps Script
+      time-trigger handles the recurring sends (see the Setup Guide).
+    </div>
+  </section>
+
+  <!-- QUESTIONNAIRE -->
+  <section id="questionnaire" class="card hidden">
+    <div class="progress-wrap"><div class="progress-bar" id="progress"></div></div>
+    <div class="step-label" id="step-label">Question 1 of 12</div>
+    <div class="step-pill" id="step-category">Sleep</div>
+    <div class="question" id="question-text"></div>
+    <div class="question-sub" id="question-sub"></div>
+    <div class="options" id="options"></div>
+    <div class="controls">
+      <button class="btn-secondary" onclick="prevQuestion()" id="btn-prev">← Back</button>
+      <button class="btn-primary" onclick="nextQuestion()" id="btn-next" disabled>Next →</button>
+    </div>
+  </section>
+
+  <!-- RESULT -->
+  <section id="result" class="card hidden">
+    <span class="demo-tag" id="result-tag">Your score</span>
+    <h2 id="result-greeting">Hi Marie — here's your March VitaScore</h2>
+    <p class="lead" id="result-date">Computed on <span id="today-date"></span></p>
+
+    <div class="score-display">
+      <div class="score-ring">
+        <svg width="220" height="220" viewBox="0 0 220 220">
+          <circle class="ring-bg" cx="110" cy="110" r="92"></circle>
+          <circle class="ring-fg" id="ring-fg" cx="110" cy="110" r="92"
+                  stroke-dasharray="578" stroke-dashoffset="578"></circle>
+        </svg>
+        <div class="score-num" id="score-num">--</div>
+      </div>
+      <div class="score-status" id="score-status">Computing…</div>
+      <p class="score-message" id="score-message"></p>
+    </div>
+
+    <h3>Key indicators</h3>
+    <div class="indicators" id="indicators"></div>
+
+    <div class="send-email-block">
+      <h3>📨 Send the real report to your email</h3>
+      <p>Click below to send this VitaScore report as an actual email to <strong id="email-display-target">your address</strong>.</p>
+      <button class="btn-send" id="btn-send-email" onclick="sendRealEmail()">Send report to my email</button>
+      <div class="send-status" id="send-status"></div>
+      <div class="activation-note hidden" id="activation-note">
+        <strong>One-time setup:</strong> The first email you receive will be an <em>activation request</em> from Formsubmit
+        (the free service powering the send). Click the activation link in that email, then click <em>"Send report"</em> again — every report after that lands directly in your inbox.
+      </div>
+    </div>
+
+    <h3>📧 Email preview (what gets sent)</h3>
+    <p style="font-size: 14px; color: var(--muted); margin-bottom: 12px;">
+      In production with Apps Script, this is auto-generated and sent on every form submission. The HTML preview below mirrors the real email.
+    </p>
+
+    <div class="email-preview">
+      <div class="email-header">
+        <div class="email-meta"><strong>From:</strong> VitaScore &lt;reports@vitascore.fr&gt;</div>
+        <div class="email-meta"><strong>To:</strong> <span id="email-to-display">family@example.com</span></div>
+        <div class="email-meta"><strong>Cc:</strong> Dr. Martin (referring GP)</div>
+        <div class="email-subject" id="email-subject">VitaScore Monthly Report — Marie Bonhomme</div>
+      </div>
+      <div class="email-body" id="email-body"></div>
+    </div>
+
+    <div class="reminders-block" style="margin-top: 28px;">
+      <h3>🔔 Want a reminder for next month?</h3>
+      <p class="sub">Pick how often we should email you a reminder to do this check-in.</p>
+      <div class="freq-grid">
+        <div class="freq-option selected" data-days="14" onclick="selectFrequency(this)">
+          <span class="freq-num">14 days</span>
+          <span class="freq-label">Every 2 weeks</span>
+        </div>
+        <div class="freq-option" data-days="30" onclick="selectFrequency(this)">
+          <span class="freq-num">Monthly</span>
+          <span class="freq-label">Every 30 days</span>
+        </div>
+      </div>
+      <div class="next-reminder">
+        Next reminder: <strong id="result-next-reminder-date">—</strong>
+      </div>
+      <div class="controls" style="margin-top: 14px;">
+        <button class="btn-primary" id="result-btn-subscribe" onclick="subscribeFromResult()">Subscribe me to reminders</button>
+      </div>
+      <div class="send-status" id="result-reminder-status"></div>
+    </div>
+
+    <div class="welcome-actions" style="margin-top: 16px;">
+      <button class="btn-secondary" onclick="goToHistoryFromResult()">📊 See my full history</button>
+      <button class="btn-secondary" onclick="restart()">↻ Run the demo again</button>
+    </div>
+  </section>
+
+  <footer class="footer-note">
+    VitaScore — Preventive AI health scoring for seniors 65+ · Built for class demo · April 2026
+  </footer>
+</div>
+
+<script>
+  // ===================== Question bank =====================
+  const QUESTIONS = [
+    // SLEEP (3 questions)
+    { cat: "Sleep", q: "How well did you sleep on average this month?", sub: "Quality of sleep, falling asleep, staying asleep.",
+      opts: [
+        { label: "Very well — restful, no trouble", pts: 10 },
+        { label: "Pretty well — minor disturbances", pts: 7 },
+        { label: "So-so — wake up tired some days", pts: 4 },
+        { label: "Poorly — frequent insomnia or fatigue", pts: 1 },
+      ]},
+    { cat: "Sleep", q: "On average, how many hours of sleep do you get per night?",
+      opts: [
+        { label: "7–9 hours", pts: 10 },
+        { label: "6–7 hours", pts: 7 },
+        { label: "5–6 hours", pts: 4 },
+        { label: "Less than 5 hours", pts: 1 },
+      ]},
+    // MOBILITY (2 questions)
+    { cat: "Mobility", q: "Are you able to walk and move around as you'd like?", sub: "Stairs, errands, daily walks.",
+      opts: [
+        { label: "Yes, with no difficulty", pts: 10 },
+        { label: "Yes, but slower than before", pts: 7 },
+        { label: "Some difficulty (need rest, support)", pts: 4 },
+        { label: "Significant difficulty or limited", pts: 1 },
+      ]},
+    { cat: "Mobility", q: "Have you fallen or had a balance issue in the past month?",
+      opts: [
+        { label: "No, never", pts: 10 },
+        { label: "Once, minor", pts: 5 },
+        { label: "Twice or more", pts: 2 },
+        { label: "Yes, with injury", pts: 0 },
+      ]},
+    // PAIN (1)
+    { cat: "Pain", q: "How would you describe the pain you've felt this month?",
+      opts: [
+        { label: "No noticeable pain", pts: 10 },
+        { label: "Mild and occasional", pts: 7 },
+        { label: "Moderate, affects activities", pts: 4 },
+        { label: "Severe and frequent", pts: 1 },
+      ]},
+    // MOOD (2)
+    { cat: "Mood", q: "How has your mood been overall?",
+      opts: [
+        { label: "Cheerful, positive most days", pts: 10 },
+        { label: "Generally OK, some down days", pts: 7 },
+        { label: "Often sad or anxious", pts: 4 },
+        { label: "Very low, hopeless", pts: 1 },
+      ]},
+    { cat: "Mood", q: "Do you still enjoy your usual activities (hobbies, family time)?",
+      opts: [
+        { label: "Yes, just like before", pts: 10 },
+        { label: "Mostly, with less enthusiasm", pts: 6 },
+        { label: "Rarely — lost interest", pts: 2 },
+        { label: "No, nothing brings joy", pts: 0 },
+      ]},
+    // ISOLATION (2)
+    { cat: "Social", q: "How many days this month did you have meaningful contact with someone?",
+      sub: "Call, visit, conversation — beyond a quick hello.",
+      opts: [
+        { label: "Most days (20+)", pts: 10 },
+        { label: "Several times a week", pts: 7 },
+        { label: "Once a week or so", pts: 4 },
+        { label: "Rarely or never", pts: 0 },
+      ]},
+    { cat: "Social", q: "Do you feel lonely or isolated?",
+      opts: [
+        { label: "Not at all", pts: 10 },
+        { label: "Sometimes, but it passes", pts: 6 },
+        { label: "Often", pts: 3 },
+        { label: "Almost always", pts: 0 },
+      ]},
+    // MEDICATION (1)
+    { cat: "Medication", q: "Did you take your medications as prescribed this month?",
+      opts: [
+        { label: "Yes, every dose", pts: 10 },
+        { label: "Forgot once or twice", pts: 6 },
+        { label: "Forgot several times", pts: 3 },
+        { label: "Often skipped doses", pts: 0 },
+      ]},
+    // NUTRITION (1)
+    { cat: "Nutrition", q: "How would you describe your appetite and meals?",
+      opts: [
+        { label: "Eating well, regular meals", pts: 10 },
+        { label: "Mostly OK, occasionally skip", pts: 7 },
+        { label: "Reduced appetite, smaller meals", pts: 3 },
+        { label: "Often skip meals or no appetite", pts: 0 },
+      ]},
+    // GENERAL (1)
+    { cat: "Overall", q: "Compared to last month, how do you feel today?",
+      opts: [
+        { label: "Better than last month", pts: 10 },
+        { label: "About the same", pts: 7 },
+        { label: "Slightly worse", pts: 4 },
+        { label: "Much worse", pts: 0 },
+      ]},
+  ];
+
+  // Previous score (for delta-based alerts)
+  const PREVIOUS_SCORE = 82;
+
+  // ===================== State =====================
+  let state = {
+    currentQ: 0,
+    answers: new Array(QUESTIONS.length).fill(null),
+    user: { name: "", age: "", email: "" },
+    selectedFrequencyDays: 14
+  };
+
+  // ===================== Storage layer =====================
+  const STORAGE_KEY = 'vitascore_data_v1';
+
+  function loadStore() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+    } catch (e) { return {}; }
+  }
+
+  function saveStore(store) {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+    } catch (e) { /* ignore quota issues for demo */ }
+  }
+
+  function getUser(email) {
+    const store = loadStore();
+    return store[email.toLowerCase()] || null;
+  }
+
+  function upsertUser(email, patch) {
+    const store = loadStore();
+    const k = email.toLowerCase();
+    store[k] = Object.assign({
+      profile: { name: '', age: '', email },
+      reminders: { enabled: false, frequencyDays: 14, lastSubscribedAt: null, nextReminderAt: null },
+      history: []
+    }, store[k] || {}, patch);
+    saveStore(store);
+    return store[k];
+  }
+
+  function appendAssessment(email, assessment) {
+    const store = loadStore();
+    const k = email.toLowerCase();
+    if (!store[k]) {
+      store[k] = {
+        profile: { name: '', age: '', email },
+        reminders: { enabled: false, frequencyDays: 14, lastSubscribedAt: null, nextReminderAt: null },
+        history: []
+      };
+    }
+    store[k].history.push(assessment);
+    // Keep history sorted oldest → newest
+    store[k].history.sort((a, b) => new Date(a.date) - new Date(b.date));
+    saveStore(store);
+  }
+
+  // For demo realism: seed two old assessments the first time we save a user's first real one,
+  // so the chart isn't a single dot. Only seed if history is empty before the new entry.
+  function seedHistoryIfEmpty(email, currentScore) {
+    const u = getUser(email);
+    if (!u || u.history.length > 0) return;
+    const now = new Date();
+    const monthsAgo = (n) => {
+      const d = new Date(now);
+      d.setMonth(d.getMonth() - n);
+      return d.toISOString();
+    };
+    // gentle plausible trend leading up to current score
+    const seed1 = Math.max(40, Math.min(95, currentScore + 4 + Math.round(Math.random() * 4)));
+    const seed2 = Math.max(40, Math.min(95, currentScore - 2 + Math.round(Math.random() * 4)));
+    appendAssessment(email, {
+      date: monthsAgo(2),
+      score: seed1,
+      status: seed1 >= 75 ? 'Good' : (seed1 >= 60 ? 'Watch' : 'Alert'),
+      breakdown: {}
+    });
+    appendAssessment(email, {
+      date: monthsAgo(1),
+      score: seed2,
+      status: seed2 >= 75 ? 'Good' : (seed2 >= 60 ? 'Watch' : 'Alert'),
+      breakdown: {}
+    });
+  }
+
+  // ===================== Page nav =====================
+  const PAGES = ['welcome', 'questionnaire', 'result', 'login', 'history', 'reminders-page'];
+  function showPage(id) {
+    PAGES.forEach(p => {
+      const el = document.getElementById(p);
+      if (el) el.classList.toggle('hidden', p !== id);
+    });
+    window.scrollTo(0, 0);
+  }
+  function backToWelcome() { showPage('welcome'); }
+  function goToLogin() { showPage('login'); }
+  function goToReminders() {
+    state.selectedFrequencyDays = 14;
+    document.querySelectorAll('#reminders-page .freq-option').forEach((el, i) => {
+      el.classList.toggle('selected', i === 0);
+    });
+    updateNextReminderDisplay('next-reminder-date', 14);
+    document.getElementById('reminder-status').textContent = '';
+    document.getElementById('reminder-activation-note').classList.add('hidden');
+    document.getElementById('btn-subscribe').disabled = false;
+    document.getElementById('btn-subscribe').textContent = 'Subscribe to reminders';
+    showPage('reminders-page');
+  }
+  function goToHistoryFromResult() {
+    if (!state.user.email) { goToLogin(); return; }
+    renderHistory(state.user.email);
+    showPage('history');
+  }
+  function newAssessmentFromHistory() { showPage('welcome'); }
+
+  function startQuestionnaire() {
+    state.user.name = document.getElementById('senior-name').value || 'Friend';
+    state.user.age = document.getElementById('senior-age').value || '';
+    state.user.email = document.getElementById('family-email').value || '';
+    // Persist profile early
+    if (state.user.email) {
+      upsertUser(state.user.email, {
+        profile: { name: state.user.name, age: state.user.age, email: state.user.email }
+      });
+    }
+    state.currentQ = 0;
+    state.answers = new Array(QUESTIONS.length).fill(null);
+    showPage('questionnaire');
+    renderQuestion();
+  }
+
+  function renderQuestion() {
+    const idx = state.currentQ;
+    const q = QUESTIONS[idx];
+    document.getElementById('progress').style.width = `${((idx) / QUESTIONS.length) * 100}%`;
+    document.getElementById('step-label').textContent = `Question ${idx + 1} of ${QUESTIONS.length}`;
+    document.getElementById('step-category').textContent = q.cat;
+    document.getElementById('question-text').textContent = q.q;
+    document.getElementById('question-sub').textContent = q.sub || '';
+    document.getElementById('question-sub').style.display = q.sub ? 'block' : 'none';
+
+    const optionsEl = document.getElementById('options');
+    optionsEl.innerHTML = '';
+    q.opts.forEach((opt, i) => {
+      const div = document.createElement('div');
+      div.className = 'option' + (state.answers[idx] === i ? ' selected' : '');
+      div.innerHTML = `<div class="option-marker"></div><div>${opt.label}</div>`;
+      div.onclick = () => {
+        state.answers[idx] = i;
+        renderQuestion();
+        document.getElementById('btn-next').disabled = false;
+      };
+      optionsEl.appendChild(div);
+    });
+
+    document.getElementById('btn-prev').style.visibility = idx === 0 ? 'hidden' : 'visible';
+    document.getElementById('btn-next').disabled = state.answers[idx] === null;
+    document.getElementById('btn-next').textContent =
+      idx === QUESTIONS.length - 1 ? 'See my VitaScore →' : 'Next →';
+  }
+
+  function prevQuestion() {
+    if (state.currentQ > 0) {
+      state.currentQ--;
+      renderQuestion();
+      window.scrollTo(0, 0);
+    }
+  }
+
+  function nextQuestion() {
+    if (state.answers[state.currentQ] === null) return;
+    if (state.currentQ < QUESTIONS.length - 1) {
+      state.currentQ++;
+      renderQuestion();
+      window.scrollTo(0, 0);
+    } else {
+      computeAndShowResult();
+    }
+  }
+
+  // ===================== Scoring =====================
+  function computeScore() {
+    let total = 0;
+    let max = 0;
+    state.answers.forEach((ans, i) => {
+      const q = QUESTIONS[i];
+      total += q.opts[ans].pts;
+      max += 10;
+    });
+    return Math.round((total / max) * 100);
+  }
+
+  function categoryBreakdown() {
+    const cats = {};
+    state.answers.forEach((ans, i) => {
+      const q = QUESTIONS[i];
+      if (!cats[q.cat]) cats[q.cat] = { sum: 0, count: 0 };
+      cats[q.cat].sum += q.opts[ans].pts;
+      cats[q.cat].count += 10;
+    });
+    return Object.entries(cats).map(([name, d]) => ({
+      name, score: Math.round((d.sum / d.count) * 100)
+    }));
+  }
+
+  function computeAndShowResult() {
+    const score = computeScore();
+    const cats = categoryBreakdown();
+
+    // Persist this assessment into local history (seed older ones if first time)
+    if (state.user.email) {
+      seedHistoryIfEmpty(state.user.email, score);
+      const breakdownObj = {};
+      cats.forEach(c => breakdownObj[c.name] = c.score);
+      const statusForSave = score >= 75 ? 'Good' : (score >= 60 ? 'Watch' : 'Alert');
+      appendAssessment(state.user.email, {
+        date: new Date().toISOString(),
+        score: score,
+        status: statusForSave,
+        breakdown: breakdownObj
+      });
+    }
+
+    // Compare against previous *real* assessment if available, else fall back to constant
+    let delta;
+    const u = state.user.email ? getUser(state.user.email) : null;
+    if (u && u.history.length >= 2) {
+      const prev = u.history[u.history.length - 2];
+      delta = score - prev.score;
+    } else {
+      delta = score - PREVIOUS_SCORE;
+    }
+
+    showPage('result');
+
+    // Greeting
+    const month = new Date().toLocaleDateString('en-US', { month: 'long' });
+    document.getElementById('result-greeting').textContent =
+      `Hi ${state.user.name.split(' ')[0]} — here's your ${month} VitaScore`;
+    document.getElementById('today-date').textContent =
+      new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    // Score ring + number
+    document.getElementById('score-num').textContent = score;
+    const circumference = 2 * Math.PI * 92;
+    const offset = circumference - (score / 100) * circumference;
+    const ring = document.getElementById('ring-fg');
+    setTimeout(() => { ring.style.strokeDashoffset = offset; }, 100);
+
+    let status, message, color;
+    if (score >= 75) {
+      status = 'Good — keep it up!';
+      color = '#02C39A';
+      document.getElementById('score-status').className = 'score-status good';
+      message = `Your VitaScore is healthy. Keep your routines steady — sleep, movement, and connection make all the difference.`;
+    } else if (score >= 60) {
+      status = 'Watch — a few areas to monitor';
+      color = '#E8A33D';
+      document.getElementById('score-status').className = 'score-status warn';
+      message = `Your VitaScore shows mild warning signs. We'd suggest a check-in with your GP within 2 weeks.`;
+    } else {
+      status = 'Alert — speak with your doctor';
+      color = '#C94B4B';
+      document.getElementById('score-status').className = 'score-status alert';
+      message = `Your VitaScore is below threshold. We've notified your family so they can support you. Please book a GP appointment this week.`;
+    }
+    document.getElementById('score-status').textContent = status;
+    document.getElementById('score-message').textContent = message;
+    ring.setAttribute('stroke', color);
+
+    // Indicators
+    const indicatorsEl = document.getElementById('indicators');
+    indicatorsEl.innerHTML = '';
+    cats.forEach(c => {
+      const valClass = c.score >= 70 ? '' : (c.score >= 50 ? 'warn' : 'alert');
+      indicatorsEl.innerHTML += `
+        <div class="indicator-row">
+          <div class="indicator-label">${c.name}</div>
+          <div class="indicator-value ${valClass}">${c.score}</div>
+        </div>`;
+    });
+
+    // Email preview
+    document.getElementById('email-to-display').textContent =
+      state.user.email || 'family@example.com';
+    document.getElementById('email-display-target').textContent =
+      state.user.email || 'your address';
+    // Reset the send block in case user runs the demo more than once
+    const sendBtn = document.getElementById('btn-send-email');
+    const sendStatus = document.getElementById('send-status');
+    const actNote = document.getElementById('activation-note');
+    if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send report to my email'; }
+    if (sendStatus) { sendStatus.className = 'send-status'; sendStatus.textContent = ''; }
+    if (actNote) { actNote.classList.add('hidden'); }
+
+    // Reset reminders block on result page
+    state.selectedFrequencyDays = 14;
+    document.querySelectorAll('#result .freq-option').forEach((el, i) => {
+      el.classList.toggle('selected', i === 0);
+    });
+    updateNextReminderDisplay('result-next-reminder-date', 14);
+    const rs = document.getElementById('result-reminder-status');
+    if (rs) { rs.className = 'send-status'; rs.textContent = ''; }
+    const rb = document.getElementById('result-btn-subscribe');
+    if (rb) { rb.disabled = false; rb.textContent = 'Subscribe me to reminders'; }
+    document.getElementById('email-subject').textContent =
+      `VitaScore Monthly Report — ${state.user.name} (Score: ${score}/100)`;
+
+    const monthLong = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    const isAlert = score < 60 || delta < -15;
+    const lowestCats = cats.filter(c => c.score < 60).map(c => c.name);
+    const topCats = cats.filter(c => c.score >= 80).map(c => c.name);
+
+    let alertBlock = '';
+    if (isAlert) {
+      alertBlock = `
+        <div class="alert-banner">
+          <strong>⚠ Action recommended:</strong> The score dropped ${delta < -15 ? 'sharply' : 'below 60'}
+          ${lowestCats.length ? `, particularly around ${lowestCats.join(', ').toLowerCase()}` : ''}.
+          Please call ${state.user.name.split(' ')[0]} today and consider scheduling a GP appointment this week.
+        </div>`;
+    } else {
+      alertBlock = `
+        <div class="info-banner">
+          <strong>✓ All clear.</strong> ${state.user.name.split(' ')[0]}'s score is healthy this month.
+          ${topCats.length ? `Strongest areas: ${topCats.join(', ').toLowerCase()}.` : ''}
+        </div>`;
+    }
+
+    const deltaText = delta > 0 ? `+${delta} points vs last month`
+                    : delta < 0 ? `${delta} points vs last month` : `unchanged from last month`;
+
+    document.getElementById('email-body').innerHTML = `
+      <p>Hello,</p>
+      <p>Here is the <strong>${monthLong}</strong> health check-in for <strong>${state.user.name}</strong>${state.user.age ? ` (${state.user.age})` : ''}.</p>
+
+      <p style="font-size: 22px; font-weight: 700; color: ${color};">
+        VitaScore: ${score} / 100 <span style="font-size:14px; font-weight: 500; color: var(--muted);">(${deltaText})</span>
+      </p>
+
+      ${alertBlock}
+
+      <p><strong>Breakdown:</strong></p>
+      <ul style="margin: 8px 0 14px 20px;">
+        ${cats.map(c => `<li>${c.name}: ${c.score}/100</li>`).join('')}
+      </ul>
+
+      <p><strong>Recommended next step:</strong></p>
+      <p>${
+        isAlert
+          ? 'Call ' + state.user.name.split(' ')[0] + ' today and schedule a GP appointment within the week.'
+          : score >= 75
+          ? 'No action needed. Encourage routines around the strongest areas.'
+          : 'A friendly check-in call this week is recommended. Book a GP visit if any new symptoms appear.'
+      }</p>
+
+      <a href="#" class="email-cta" onclick="event.preventDefault();">View full PDF report →</a>
+
+      <p style="margin-top: 18px; color: var(--muted); font-size: 13px;">
+        — VitaScore<br>
+        Preventive health scoring for seniors 65+. Reply to this email anytime; a real human reads every one.
+      </p>
+    `;
+  }
+
+  // ===================== Real email send (Formsubmit) =====================
+  async function sendRealEmail() {
+    const btn = document.getElementById('btn-send-email');
+    const statusEl = document.getElementById('send-status');
+    const activationNote = document.getElementById('activation-note');
+    const email = (state.user.email || '').trim();
+
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      statusEl.className = 'send-status error';
+      statusEl.textContent = '⚠ Please go back to the welcome page and enter a valid family email.';
+      return;
+    }
+
+    btn.disabled = true;
+    statusEl.className = 'send-status';
+    statusEl.textContent = 'Sending…';
+
+    const score = computeScore();
+    const cats = categoryBreakdown();
+    const delta = score - PREVIOUS_SCORE;
+    const month = new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    let status, message;
+    if (score >= 75) {
+      status = 'Good — keep it up';
+      message = 'Score is healthy. No action needed this month.';
+    } else if (score >= 60) {
+      status = 'Watch — areas to monitor';
+      message = 'Mild warning signs. Suggest a GP check-in within 2 weeks.';
+    } else {
+      status = 'Alert — please act this week';
+      message = 'Score below threshold. Family is notified; book a GP appointment now.';
+    }
+
+    const deltaText = delta >= 0 ? `+${delta}` : `${delta}`;
+    const breakdown = cats.map(c => `${c.name}: ${c.score}/100`).join(' · ');
+    const nextStep =
+      score < 60 ? `Call ${state.user.name.split(' ')[0]} today and book a GP appointment within the week.`
+      : score < 75 ? `Friendly check-in call recommended this week.`
+      : `Keep current routines steady. No action needed.`;
+
+    const payload = {
+      _subject: `VitaScore Report — ${state.user.name} — ${score}/100 — ${status}`,
+      _captcha: 'false',
+      _template: 'box',
+      "Senior name": state.user.name,
+      "Age": state.user.age || '—',
+      "Month": month,
+      "VitaScore": `${score}/100  (${deltaText} vs last month)`,
+      "Status": status,
+      "Summary": message,
+      "Breakdown": breakdown,
+      "Recommended next step": nextStep,
+      "Sent via": "VitaScore MVP demo · " + new Date().toLocaleString()
+    };
+
+    try {
+      const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok && (data.success === 'true' || data.success === true)) {
+        statusEl.className = 'send-status success';
+        statusEl.textContent = `✓ Request sent to ${email}. Check your inbox in a few seconds.`;
+        activationNote.classList.remove('hidden');
+        btn.textContent = 'Send another report';
+        btn.disabled = false;
+      } else {
+        statusEl.className = 'send-status error';
+        statusEl.textContent = '✗ Could not send. ' + (data.message || 'Please retry in a moment.');
+        btn.disabled = false;
+      }
+    } catch (err) {
+      statusEl.className = 'send-status error';
+      statusEl.textContent = '✗ Network error. Please retry.';
+      btn.disabled = false;
+    }
+  }
+
+  // ===================== Login + History =====================
+  function loginAndShowHistory() {
+    const email = (document.getElementById('login-email').value || '').trim();
+    const status = document.getElementById('login-status');
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      status.className = 'send-status error';
+      status.textContent = '⚠ Please enter a valid email.';
+      return;
+    }
+    const user = getUser(email);
+    if (!user || !user.history || user.history.length === 0) {
+      status.className = 'send-status error';
+      status.textContent = '✗ No history found for this email yet. Complete one questionnaire first.';
+      return;
+    }
+    status.className = 'send-status success';
+    status.textContent = '✓ Magic link "clicked". Loading your history…';
+    state.user.email = email;
+    state.user.name = user.profile.name || 'there';
+    setTimeout(() => {
+      renderHistory(email);
+      showPage('history');
+    }, 400);
+  }
+
+  function renderHistory(email) {
+    const user = getUser(email);
+    if (!user || !user.history.length) return;
+
+    const firstName = (user.profile.name || 'Your').split(' ')[0];
+    document.getElementById('history-title').textContent = `${firstName}'s VitaScore history`;
+    document.getElementById('history-subtitle').textContent =
+      `${user.history.length} assessment${user.history.length > 1 ? 's' : ''} on file · last updated ${formatDate(user.history[user.history.length - 1].date)}`;
+
+    // Stats
+    const scores = user.history.map(h => h.score);
+    const latest = scores[scores.length - 1];
+    const avg = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    const trend = scores.length >= 2 ? latest - scores[scores.length - 2] : 0;
+    const trendClass = trend > 0 ? 'up' : (trend < 0 ? 'down' : '');
+    const trendSign = trend > 0 ? '+' : '';
+
+    document.getElementById('history-stats').innerHTML = `
+      <div class="stat-card">
+        <span class="stat-num">${latest}</span>
+        <span class="stat-label">Latest score</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num">${avg}</span>
+        <span class="stat-label">Average</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-num ${trendClass}">${trendSign}${trend}</span>
+        <span class="stat-label">vs last month</span>
+      </div>
+    `;
+
+    // Chart
+    document.getElementById('history-chart').innerHTML = renderChart(user.history);
+
+    // List
+    const listEl = document.getElementById('history-list');
+    listEl.innerHTML = '';
+    // Render newest first in the list
+    [...user.history].reverse().forEach((entry, idx) => {
+      const reverseIdx = user.history.length - 1 - idx;
+      const prev = reverseIdx > 0 ? user.history[reverseIdx - 1] : null;
+      const d = prev ? entry.score - prev.score : null;
+      const dCls = d === null ? 'flat' : (d > 0 ? 'up' : (d < 0 ? 'down' : 'flat'));
+      const dTxt = d === null ? 'first' : (d > 0 ? `+${d}` : `${d}`);
+
+      const color = entry.score >= 75 ? '#02C39A' : (entry.score >= 60 ? '#E8A33D' : '#C94B4B');
+      listEl.innerHTML += `
+        <div class="history-item">
+          <div class="history-score" style="background: ${color};">${entry.score}</div>
+          <div class="history-info">
+            <div class="history-date">${formatDate(entry.date)}</div>
+            <div class="history-status-row">${entry.status} · ${formatBreakdownShort(entry.breakdown)}</div>
+          </div>
+          <div class="history-delta ${dCls}">${dTxt}</div>
+        </div>
+      `;
+    });
+  }
+
+  function formatDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function formatBreakdownShort(bk) {
+    if (!bk || Object.keys(bk).length === 0) return 'summary not stored';
+    const entries = Object.entries(bk);
+    const sorted = entries.sort((a, b) => a[1] - b[1]);
+    const lowest = sorted[0];
+    return `Lowest: ${lowest[0]} (${lowest[1]})`;
+  }
+
+  // SVG line chart for score history
+  function renderChart(history) {
+    const W = 640, H = 220, padL = 36, padR = 16, padT = 14, padB = 28;
+    const n = history.length;
+    if (n === 0) return '<p>No data.</p>';
+    const xs = history.map((_, i) => padL + (i * (W - padL - padR)) / Math.max(1, n - 1));
+    const ymin = 0, ymax = 100;
+    const yScale = (v) => padT + (1 - (v - ymin) / (ymax - ymin)) * (H - padT - padB);
+    const points = history.map((h, i) => `${xs[i]},${yScale(h.score)}`).join(' ');
+
+    let gridLines = '';
+    [0, 25, 50, 75, 100].forEach(v => {
+      const y = yScale(v);
+      gridLines += `<line x1="${padL}" x2="${W - padR}" y1="${y}" y2="${y}" stroke="#E2DED1" stroke-width="1"/>
+                    <text x="${padL - 6}" y="${y + 4}" text-anchor="end" font-size="10" fill="#6A7B80">${v}</text>`;
+    });
+    // Threshold lines (alert zone)
+    gridLines += `<line x1="${padL}" x2="${W - padR}" y1="${yScale(60)}" y2="${yScale(60)}" stroke="#C94B4B" stroke-width="1" stroke-dasharray="3,4" opacity="0.5"/>`;
+    gridLines += `<line x1="${padL}" x2="${W - padR}" y1="${yScale(75)}" y2="${yScale(75)}" stroke="#02C39A" stroke-width="1" stroke-dasharray="3,4" opacity="0.5"/>`;
+
+    let dots = '';
+    history.forEach((h, i) => {
+      const color = h.score >= 75 ? '#02C39A' : (h.score >= 60 ? '#E8A33D' : '#C94B4B');
+      dots += `<circle cx="${xs[i]}" cy="${yScale(h.score)}" r="6" fill="${color}" stroke="white" stroke-width="2"/>`;
+      dots += `<text x="${xs[i]}" y="${yScale(h.score) - 12}" text-anchor="middle" font-size="11" font-weight="700" fill="#0A2E36">${h.score}</text>`;
+      // x labels
+      const d = new Date(h.date);
+      const lbl = d.toLocaleDateString('en-US', { month: 'short' });
+      dots += `<text x="${xs[i]}" y="${H - 8}" text-anchor="middle" font-size="11" fill="#6A7B80">${lbl}</text>`;
+    });
+
+    return `
+      <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%; height:auto;">
+        ${gridLines}
+        <polyline fill="none" stroke="#028090" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${points}"/>
+        ${dots}
+      </svg>
+    `;
+  }
+
+  // ===================== Reminders =====================
+  function selectFrequency(el) {
+    const days = parseInt(el.dataset.days, 10);
+    state.selectedFrequencyDays = days;
+    // Clear sibling selection within the same parent grid
+    const parent = el.parentElement;
+    parent.querySelectorAll('.freq-option').forEach(opt => opt.classList.remove('selected'));
+    el.classList.add('selected');
+    // Update the display in this section
+    if (parent.closest('#reminders-page')) {
+      updateNextReminderDisplay('next-reminder-date', days);
+    } else if (parent.closest('#result')) {
+      updateNextReminderDisplay('result-next-reminder-date', days);
+    }
+  }
+
+  function updateNextReminderDisplay(elId, days) {
+    const next = new Date();
+    next.setDate(next.getDate() + days);
+    const txt = next.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const el = document.getElementById(elId);
+    if (el) el.textContent = txt;
+  }
+
+  async function subscribeToReminders() {
+    const email = (document.getElementById('reminder-email').value || '').trim();
+    const statusEl = document.getElementById('reminder-status');
+    const note = document.getElementById('reminder-activation-note');
+    const btn = document.getElementById('btn-subscribe');
+    await doSubscribe(email, state.selectedFrequencyDays, statusEl, note, btn);
+  }
+
+  async function subscribeFromResult() {
+    const email = state.user.email;
+    const statusEl = document.getElementById('result-reminder-status');
+    const note = null; // simpler note inline
+    const btn = document.getElementById('result-btn-subscribe');
+    await doSubscribe(email, state.selectedFrequencyDays, statusEl, note, btn);
+  }
+
+  async function doSubscribe(email, days, statusEl, note, btn) {
+    if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      statusEl.className = 'send-status error';
+      statusEl.textContent = '⚠ Please enter a valid email.';
+      return;
+    }
+    btn.disabled = true;
+    statusEl.className = 'send-status';
+    statusEl.textContent = 'Subscribing…';
+
+    const next = new Date();
+    next.setDate(next.getDate() + days);
+    const nextHuman = next.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const freqLabel = days === 14 ? 'every 2 weeks' : 'every month';
+
+    // Save preference locally
+    upsertUser(email, {
+      reminders: {
+        enabled: true,
+        frequencyDays: days,
+        lastSubscribedAt: new Date().toISOString(),
+        nextReminderAt: next.toISOString()
+      }
+    });
+
+    // Send a confirmation email via Formsubmit
+    const payload = {
+      _subject: `VitaScore reminders activated — ${freqLabel}`,
+      _captcha: 'false',
+      _template: 'box',
+      "Subscription": "VitaScore monthly check-in reminders",
+      "Frequency": freqLabel,
+      "Next reminder": nextHuman,
+      "Email": email,
+      "Note": "You can change frequency or unsubscribe any time from the demo. In production, the recurring sends are handled by Apps Script's time-based trigger."
+    };
+
+    try {
+      const res = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(email)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && (data.success === 'true' || data.success === true)) {
+        statusEl.className = 'send-status success';
+        statusEl.textContent = `✓ Subscribed! Confirmation email sent. Next reminder: ${nextHuman}.`;
+        if (note) note.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Update subscription';
+      } else {
+        statusEl.className = 'send-status error';
+        statusEl.textContent = '✗ Could not subscribe. ' + (data.message || 'Please retry.');
+        btn.disabled = false;
+      }
+    } catch (err) {
+      statusEl.className = 'send-status error';
+      statusEl.textContent = '✗ Network error. Please retry.';
+      btn.disabled = false;
+    }
+  }
+
+  function restart() {
+    state = {
+      currentQ: 0,
+      answers: new Array(QUESTIONS.length).fill(null),
+      user: { name: "", age: "", email: "" },
+      selectedFrequencyDays: 14
+    };
+    document.getElementById('ring-fg').style.strokeDashoffset = 578;
+    showPage('welcome');
+  }
+</script>
+</body>
+</html>
